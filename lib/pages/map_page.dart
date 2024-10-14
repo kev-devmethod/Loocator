@@ -12,6 +12,7 @@ class _MapPageState extends State<MapPage> {
   late GoogleMapController mapController;
 
   final LatLng _center = const LatLng(32.785811, -79.936280);
+  final LatLng _BerryHall = const LatLng(32.785513, -79.937533);
 
   void _onMapCreated(GoogleMapController controller) {
     mapController = controller;
@@ -29,8 +30,15 @@ class _MapPageState extends State<MapPage> {
           onMapCreated: _onMapCreated,
           initialCameraPosition: CameraPosition(
             target: _center,
-            zoom: 16.0,
+            zoom: 17.0,
           ),
+          markers: {
+            Marker(
+              markerId: MarkerId('_BerryHall'),
+              icon: BitmapDescriptor.defaultMarker,
+              position: _BerryHall,
+            )
+          },
         ),
       ),
     );
