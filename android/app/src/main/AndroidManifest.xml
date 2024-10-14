@@ -3,6 +3,10 @@
         android:label="loocator"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <meta-data
+                android:name="com.google.android.geo.API_KEY"
+                android:value="AIzaSyCQnKWOm5EVbClGDTYYY1trb5hvPgymuh4"
+        />
         <activity
             android:name=".MainActivity"
             android:exported="true"
