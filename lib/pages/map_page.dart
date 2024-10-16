@@ -1,8 +1,10 @@
 import 'dart:async';
 
+import 'package:loocator/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
@@ -21,10 +23,17 @@ class _MapPageState extends State<MapPage> {
   final LatLng _EducationCenter = const LatLng(32.782801, -79.936165);
   LatLng? _currentP = null;
 
+  Map<PolylineId, Polyline> polylines = Map<PolylineId, Polyline>();
+
   @override
   void initState() {
     super.initState();
-    getLocationUpdates();
+    getLocationUpdates().then(
+            (_) => {
+              getPolylinePoints().then((coordinates) => {
+                generatePolylineFromPoints(coordinates),
+              }),
+            });
   }
 
   @override
@@ -62,6 +71,7 @@ class _MapPageState extends State<MapPage> {
               position: _currentP!,
             )
           },
+          polylines: Set<Polyline>.of(polylines.values),
         ),
       ),
     );
@@ -104,6 +114,39 @@ class _MapPageState extends State<MapPage> {
           _cameraToPosition(_currentP!);
         });
       }
+    });
+  }
+
+  Future<List<LatLng>> getPolylinePoints() async {
+    List<LatLng> polylineCoodinates = [];
+    PolylinePoints polylinePoints = PolylinePoints();
+    PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
+      request: PolylineRequest(
+        origin: PointLatLng(_BerryHall.latitude, _BerryHall.longitude),
+        destination: PointLatLng(_EducationCenter.latitude, _EducationCenter.longitude),
+        mode: TravelMode.walking),
+      googleApiKey: GOOGLE_MAPS_API_KEY, );
+
+    if (result.points.isNotEmpty) {
+      result.points.forEach((PointLatLng point) {
+        polylineCoodinates.add(LatLng(point.latitude, point.longitude));
+      });
+    }
+    else {
+      print(result.errorMessage);
+    }
+    return polylineCoodinates;
+  }
+
+  void generatePolylineFromPoints(List<LatLng> polylineCoordinates) async {
+    PolylineId id = PolylineId("poly");
+    Polyline polyline = Polyline(
+        polylineId: id,
+        color: Colors.lightBlueAccent,
+        points: polylineCoordinates,
+        width: 8);
+    setState(() {
+      polylines[id] = polyline;
     });
   }
 }
