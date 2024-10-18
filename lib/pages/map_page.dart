@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 
 import 'package:loocator/constants.dart';
 import 'package:flutter/material.dart';
