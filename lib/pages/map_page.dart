@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:loocator/constants.dart';
 import 'package:flutter/material.dart';
@@ -30,7 +31,7 @@ class _MapPageState extends State<MapPage> {
     super.initState();
     getLocationUpdates().then(
             (_) => {
-              getPolylinePoints().then((coordinates) => {
+              getPolylinePoints(toPointLatLng(_BerryHall), toPointLatLng(_EducationCenter)).then((coordinates) => {
                 generatePolylineFromPoints(coordinates),
               }),
             });
@@ -54,6 +55,7 @@ class _MapPageState extends State<MapPage> {
             target: _center,
             zoom: 17.0,
           ),
+          myLocationEnabled: true,
           markers: {
             Marker(
               markerId: MarkerId('_BerryHall'),
@@ -65,11 +67,6 @@ class _MapPageState extends State<MapPage> {
               icon: BitmapDescriptor.defaultMarker,
               position: _EducationCenter,
             ),
-            Marker(
-              markerId: MarkerId('_currentLocation'),
-              icon: BitmapDescriptor.defaultMarker,
-              position: _currentP!,
-            )
           },
           polylines: Set<Polyline>.of(polylines.values),
         ),
@@ -117,13 +114,13 @@ class _MapPageState extends State<MapPage> {
     });
   }
 
-  Future<List<LatLng>> getPolylinePoints() async {
+  Future<List<LatLng>> getPolylinePoints(PointLatLng origin, PointLatLng destination) async {
     List<LatLng> polylineCoodinates = [];
     PolylinePoints polylinePoints = PolylinePoints();
     PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
       request: PolylineRequest(
-        origin: PointLatLng(_BerryHall.latitude, _BerryHall.longitude),
-        destination: PointLatLng(_EducationCenter.latitude, _EducationCenter.longitude),
+        origin: origin,
+        destination: destination,
         mode: TravelMode.walking),
       googleApiKey: GOOGLE_MAPS_API_KEY, );
 
@@ -148,5 +145,9 @@ class _MapPageState extends State<MapPage> {
     setState(() {
       polylines[id] = polyline;
     });
+  }
+  
+  PointLatLng toPointLatLng(LatLng coordinates) {
+    return PointLatLng(coordinates.latitude, coordinates.longitude);
   }
 }
