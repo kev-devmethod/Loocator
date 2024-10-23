@@ -16,7 +16,8 @@ class MapPage extends StatefulWidget {
 class _MapPageState extends State<MapPage> {
   Location _locationController = new Location();
 
-  final Completer<GoogleMapController> _mapController = Completer<GoogleMapController>();
+  final Completer<GoogleMapController> _mapController =
+      Completer<GoogleMapController>();
 
   final LatLng _center = const LatLng(32.785811, -79.936280);
   final LatLng _BerryHall = const LatLng(32.785513, -79.937533);
@@ -28,12 +29,13 @@ class _MapPageState extends State<MapPage> {
   @override
   void initState() {
     super.initState();
-    getLocationUpdates().then(
-            (_) => {
-              getPolylinePoints(toPointLatLng(_BerryHall), toPointLatLng(_EducationCenter)).then((coordinates) => {
-                generatePolylineFromPoints(coordinates),
-              }),
-            });
+    getLocationUpdates().then((_) => {
+          getPolylinePoints(
+                  toPointLatLng(_BerryHall), toPointLatLng(_EducationCenter))
+              .then((coordinates) => {
+                    generatePolylineFromPoints(coordinates),
+                  }),
+        });
   }
 
   @override
@@ -44,41 +46,39 @@ class _MapPageState extends State<MapPage> {
           title: const Text('Loocator'),
           backgroundColor: Colors.lightBlueAccent,
         ),
-        body: _currentP == null ?
-        const Center(
-          child: Text("Loading..."),
-        )
-        : GoogleMap(
-          onMapCreated: ((GoogleMapController controller) => _mapController.complete(controller)),
-          initialCameraPosition: CameraPosition(
-            target: _center,
-            zoom: 17.0,
-          ),
-          myLocationEnabled: true,
-          markers: {
-            Marker(
-              markerId: MarkerId('_BerryHall'),
-              icon: BitmapDescriptor.defaultMarker,
-              position: _BerryHall,
-            ),
-            Marker(
-              markerId: MarkerId('_EducationCenter'),
-              icon: BitmapDescriptor.defaultMarker,
-              position: _EducationCenter,
-            ),
-          },
-          polylines: Set<Polyline>.of(polylines.values),
-        ),
+        body: _currentP == null
+            ? const Center(
+                child: Text("Loading..."),
+              )
+            : GoogleMap(
+                onMapCreated: ((GoogleMapController controller) =>
+                    _mapController.complete(controller)),
+                initialCameraPosition: CameraPosition(
+                  target: _center,
+                  zoom: 17.0,
+                ),
+                myLocationEnabled: true,
+                markers: {
+                  Marker(
+                    markerId: MarkerId('_BerryHall'),
+                    icon: BitmapDescriptor.defaultMarker,
+                    position: _BerryHall,
+                  ),
+                  Marker(
+                    markerId: MarkerId('_EducationCenter'),
+                    icon: BitmapDescriptor.defaultMarker,
+                    position: _EducationCenter,
+                  ),
+                },
+                polylines: Set<Polyline>.of(polylines.values),
+              ),
       ),
     );
   }
 
   Future<void> _cameraToPosition(LatLng pos) async {
     final GoogleMapController controller = await _mapController.future;
-    CameraPosition _newCameraPosition = CameraPosition(
-        target: pos,
-        zoom: 17.0
-    );
+    CameraPosition _newCameraPosition = CameraPosition(target: pos, zoom: 17.0);
 
     await controller.animateCamera(
       CameraUpdate.newCameraPosition(_newCameraPosition),
@@ -93,7 +93,9 @@ class _MapPageState extends State<MapPage> {
 
     if (_serviceEnabled) {
       _serviceEnabled = await _locationController.requestService();
-    } else { return;}
+    } else {
+      return;
+    }
 
     _permissionGranted = await _locationController.hasPermission();
     if (_permissionGranted == PermissionStatus.denied) {
@@ -103,32 +105,34 @@ class _MapPageState extends State<MapPage> {
       }
     }
 
-    _locationController.onLocationChanged.listen((LocationData currentLocation) {
-      if (currentLocation.latitude != null && currentLocation.longitude != null) {
+    _locationController.onLocationChanged
+        .listen((LocationData currentLocation) {
+      if (currentLocation.latitude != null &&
+          currentLocation.longitude != null) {
         setState(() {
-          _currentP = LatLng(currentLocation.latitude!, currentLocation.longitude!);
+          _currentP =
+              LatLng(currentLocation.latitude!, currentLocation.longitude!);
           _cameraToPosition(_currentP!);
         });
       }
     });
   }
 
-  Future<List<LatLng>> getPolylinePoints(PointLatLng origin, PointLatLng destination) async {
+  Future<List<LatLng>> getPolylinePoints(
+      PointLatLng origin, PointLatLng destination) async {
     List<LatLng> polylineCoodinates = [];
     PolylinePoints polylinePoints = PolylinePoints();
     PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
       request: PolylineRequest(
-        origin: origin,
-        destination: destination,
-        mode: TravelMode.walking),
-      googleApiKey: GOOGLE_MAPS_API_KEY, );
+          origin: origin, destination: destination, mode: TravelMode.walking),
+      googleApiKey: GOOGLE_MAPS_API_KEY,
+    );
 
     if (result.points.isNotEmpty) {
       result.points.forEach((PointLatLng point) {
         polylineCoodinates.add(LatLng(point.latitude, point.longitude));
       });
-    }
-    else {
+    } else {
       print(result.errorMessage);
     }
     return polylineCoodinates;
@@ -145,7 +149,7 @@ class _MapPageState extends State<MapPage> {
       polylines[id] = polyline;
     });
   }
-  
+
   PointLatLng toPointLatLng(LatLng coordinates) {
     return PointLatLng(coordinates.latitude, coordinates.longitude);
   }
