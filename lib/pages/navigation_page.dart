@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:google_navigation_flutter/google_navigation_flutter.dart';
 import 'package:loocator/api/routes_api.dart';
 import 'package:loocator/utils/utils.dart';
+import 'package:loocator/widgets/in_route_screen.dart';
+import 'package:loocator/widgets/info_screen.dart';
 
 class NavigationPage extends StatefulWidget {
   const NavigationPage({super.key});
@@ -32,16 +34,24 @@ class _NavigationPageState extends State<NavigationPage> {
   bool _termsAndConditionsAccepted = false;
 
   bool _errorOnSetDestinations = false;
+  bool _validRoute = false;
+  bool _uiEnabled = false;
 
   GoogleNavigationViewController? _navigationViewController;
   bool _navigatorInitializedAtLeastOnce = false;
 
   int _onRoadSnappedLocationUpdatedEventCallCount = 0;
   int _onRoadSnappedRawLocationUpdatedEventCallCount = 0;
+  int _onRemainingTimeOrDistanceChangedEventCallCount = 0;
   StreamSubscription<RoadSnappedLocationUpdatedEvent>?
       _roadSnappedLocationUpdatedSubscription;
   StreamSubscription<RoadSnappedRawLocationUpdatedEvent>?
       _roadSnappedRawLocationUpdatedSubscription;
+  StreamSubscription<RemainingTimeOrDistanceChangedEvent>?
+      _remainingTimeOrDistanceChangedSubscription;
+
+  int _remainingDistance = 0;
+  int _remaingingTime = 0;
 
   @override
   void initState() {
@@ -107,12 +117,29 @@ class _NavigationPageState extends State<NavigationPage> {
   }
 
   Future<void> _setupListeners() async {
+    _clearListeners();
     _roadSnappedLocationUpdatedSubscription =
         await GoogleMapsNavigator.setRoadSnappedLocationUpdatedListener(
             _onRoadSnappedLocationUpdatedEvent);
     _roadSnappedRawLocationUpdatedSubscription =
         await GoogleMapsNavigator.setRoadSnappedRawLocationUpdatedListener(
             _onRoadSnappedRawLocationUpdatedEvent);
+    _remainingTimeOrDistanceChangedSubscription =
+        GoogleMapsNavigator.setOnRemainingTimeOrDistanceChangedListener(
+            _onRemainingTimeOrDistanceChangedEvent,
+            remainingDistanceThresholdMeters: 100,
+            remainingTimeThresholdSeconds: 60);
+  }
+
+  void _clearListeners() {
+    _roadSnappedLocationUpdatedSubscription?.cancel();
+    _roadSnappedLocationUpdatedSubscription = null;
+
+    _roadSnappedRawLocationUpdatedSubscription?.cancel();
+    _roadSnappedRawLocationUpdatedSubscription = null;
+
+    _remainingTimeOrDistanceChangedSubscription?.cancel();
+    _remainingTimeOrDistanceChangedSubscription = null;
   }
 
   void _onRoadSnappedLocationUpdatedEvent(
@@ -140,12 +167,24 @@ class _NavigationPageState extends State<NavigationPage> {
     });
   }
 
+  void _onRemainingTimeOrDistanceChangedEvent(
+      RemainingTimeOrDistanceChangedEvent event) {
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _remainingDistance = event.remainingDistance.toInt();
+      _remaingingTime = event.remainingTime.toInt();
+      _onRemainingTimeOrDistanceChangedEventCallCount += 1;
+    });
+  }
+
   ///Places predetermined markers in map when the map is creates
   Future<void> _placeMarkers() async {
     for (LatLng marker in markers) {
       await _navigationViewController!.addMarkers(<MarkerOptions>[
         MarkerOptions(
-            infoWindow: const InfoWindow(title: 'Destination'),
             position:
                 LatLng(latitude: marker.latitude, longitude: marker.longitude))
       ]);
@@ -168,13 +207,15 @@ class _NavigationPageState extends State<NavigationPage> {
         target: LatLng(
             latitude: waypointMarker.options.position.latitude,
             longitude: waypointMarker.options.position.longitude)));
-
-    await _updateNavigationDestinationsAndNavigationViewState();
   }
 
-  Future<void> _updateNavigationDestinationsAndNavigationViewState() async {
-    final bool success = await _updateNavigationDestinations();
-    if (success) await _navigationViewController!.setNavigationUIEnabled(true);
+  /// Displays destinations before starting navigation
+  Future<void> _displayDestination() async {
+    _navigationViewController!.moveCamera(CameraUpdate.newLatLngBounds(
+        LatLngBounds(
+            southwest: _userLocation!, northeast: _waypoints.first.target!),
+        padding: 105));
+    _updateNavigationDestinations();
   }
 
   Future<bool> _updateNavigationDestinations() async {
@@ -186,7 +227,7 @@ class _NavigationPageState extends State<NavigationPage> {
     }
 
     // Build destinations with Routes API
-    final Destinations? destinations = await _buildDestinationsWithRoutesApi();
+    final Destinations? destinations = _buildDestinations();
 
     if (destinations == null) {
       setState(() {
@@ -204,45 +245,46 @@ class _NavigationPageState extends State<NavigationPage> {
           // Route is valid. Return true as success.
           setState(() {
             _errorOnSetDestinations = false;
+            _validRoute = true;
           });
           return true;
         case NavigationRouteStatus.internalError:
-          debugPrint(
+          showMessage(
               'Unexpected internal error occured. Please restart the app.');
         case NavigationRouteStatus.routeNotFound:
-          debugPrint('The route could not be calculated.');
+          showMessage('The route could not be calculated.');
         case NavigationRouteStatus.networkError:
-          debugPrint(
+          showMessage(
               'Working network connection is required to calculate the route.');
         case NavigationRouteStatus.quotaExceeded:
-          debugPrint('Insufficient API quota to use the navigation.');
+          showMessage('Insufficient API quota to use the navigation.');
         case NavigationRouteStatus.quotaCheckFailed:
-          debugPrint(
+          showMessage(
               'API quota check failed, cannot authorize the navigation.');
         case NavigationRouteStatus.apiKeyNotAuthorized:
-          debugPrint('A valid API key is required to use the navigation.');
+          showMessage('A valid API key is required to use the navigation.');
         case NavigationRouteStatus.statusCanceled:
-          debugPrint(
+          showMessage(
               'The route calculation was canceled in favor of a newer one.');
         case NavigationRouteStatus.duplicateWaypointsError:
-          debugPrint(
+          showMessage(
               'The route could not be calculated because of duplicate waypoints.');
         case NavigationRouteStatus.noWaypointsError:
-          debugPrint(
+          showMessage(
               'The route could not be calculated because no waypoints were provided.');
         case NavigationRouteStatus.locationUnavailable:
-          debugPrint(
+          showMessage(
               'No user location is available. Did you allow location permission?');
         case NavigationRouteStatus.waypointError:
-          debugPrint('Invalid waypoints provided.');
+          showMessage('Invalid waypoints provided.');
         case NavigationRouteStatus.travelModeUnsupported:
-          debugPrint(
+          showMessage(
               'The route could not calculated for the given travel mode.');
         case NavigationRouteStatus.unknown:
-          debugPrint(
+          showMessage(
               'The route could not be calculated due to an unknown error.');
         case NavigationRouteStatus.locationUnknown:
-          debugPrint(
+          showMessage(
               'The route could not be calculated, because the user location is unknown.');
       }
     } on RouteTokenMalformedException catch (_) {
@@ -256,37 +298,21 @@ class _NavigationPageState extends State<NavigationPage> {
     return false;
   }
 
-  Future<Destinations?> _buildDestinationsWithRoutesApi() async {
-    debugPrint('Using route token from Routes API.');
-
-    List<String> routeTokens = <String>[];
-
-    try {
-      routeTokens = await getRouteToken(<NavigationWaypoint>[
-        // Add user's location as start location for gettig route token.
-        NavigationWaypoint.withLatLngTarget(
-            title: 'Origin', target: _userLocation),
-        ..._waypoints,
-      ]);
-    } catch (e) {
-      debugPrint('Failed to get route tokens from Routes API.');
-      return null;
-    }
-
-    if (routeTokens.isEmpty) {
-      debugPrint('Failed to get route tokens from Routes API.');
-      return null;
-    } else if (routeTokens.length > 1) {
-      debugPrint(
-          'More than one route token received from Routes API. Using the first one.');
-    }
+  /// Build destinations from [_waypoints].
+  Destinations? _buildDestinations() {
+    // Shows a delayed calculating message
+    unawaited(showCalculatingMessage());
 
     return Destinations(
         waypoints: _waypoints,
-        displayOptions: NavigationDisplayOptions(showDestinationMarkers: false),
-        routeTokenOptions: RouteTokenOptions(
-            routeToken: routeTokens.first,
-            travelMode: NavigationTravelMode.driving));
+        displayOptions: NavigationDisplayOptions(
+          showDestinationMarkers: false,
+          showStopSigns: true,
+          showTrafficLights: true,
+        ),
+        // Always set travel mode to walking
+        routingOptions:
+            RoutingOptions(travelMode: NavigationTravelMode.walking));
   }
 
   @override
@@ -300,7 +326,6 @@ class _NavigationPageState extends State<NavigationPage> {
           //? Text('hello')
           ? GoogleMapsNavigationView(
               onViewCreated: _onViewCreated,
-              onMapClicked: _onMapClicked,
               onMarkerClicked: _onMarkerClicked,
               initialNavigationUIEnabledPreference:
                   NavigationUIEnabledPreference.disabled,
@@ -312,7 +337,30 @@ class _NavigationPageState extends State<NavigationPage> {
               initialZoomControlsEnabled: false,
             )
           : const Center(child: CircularProgressIndicator()),
+      bottomSheet: (_validRoute && !_uiEnabled)
+          ? _goScreen()
+          : (_validRoute && _uiEnabled)
+              ? InRouteScreen(
+                  onPressed: () {
+                    setState(() {
+                      cleanSlate();
+                    });
+                  },
+                  distance: _remainingDistance,
+                  time: _remaingingTime,
+                )
+              : null,
     );
+  }
+
+  void cleanSlate() {
+    _validRoute = false;
+    _uiEnabled = false;
+    _waypoints.clear();
+    _navigationViewController!.setNavigationUIEnabled(false);
+    _navigationViewController!.moveCamera(CameraUpdate.newCameraPosition(
+        CameraPosition(target: _userLocation!, zoom: 17)));
+    GoogleMapsNavigator.cleanup();
   }
 
   Future<void> _onViewCreated(GoogleNavigationViewController controller) async {
@@ -322,36 +370,99 @@ class _NavigationPageState extends State<NavigationPage> {
     // Additional setup can be added here.
   }
 
-  Future<void> _onMapClicked(LatLng location) async {
-    await _navigationViewController!.addMarkers(<MarkerOptions>[
-      MarkerOptions(
-          infoWindow: const InfoWindow(title: 'Destination'),
-          position: LatLng(
-              latitude: location.latitude, longitude: location.longitude))
-    ]);
-  }
-
   void _onMarkerClicked(String marker) {
-    debugPrint(marker);
-    _addWaypoint(marker);
+    _updateNavigationDestinations();
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => InfoScreen(
+        onPressed: () async {
+          Navigator.pop(context);
+          await _addWaypoint(marker);
+          _displayDestination();
+        },
+        distance: _remainingDistance,
+        time: _remaingingTime,
+      ),
+    );
   }
 
   @override
   void dispose() {
-    if (_navigatorInitializedAtLeastOnce) {
-      GoogleMapsNavigator.cleanup();
-    }
+    GoogleMapsNavigator.cleanup();
     super.dispose();
   }
 
-  // Implement this
+  void showMessage(String message) {
+    final SnackBar snackBar = SnackBar(content: Text(message));
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
 
-  // void showMessage(String message) {
-  //   if (isOverlayVisible) {
-  //     showOverlayMessage(message);
-  //   } else {
-  //     final SnackBar snackBar = SnackBar(content: Text(message));
-  //     ScaffoldMessenger.of(context).showSnackBar(snackBar);
-  //   }
-  // }
+  Future<void> showCalculatingMessage() async {
+    await Future<void>.delayed(const Duration(seconds: 1));
+    if (!_validRoute) {
+      showMessage('Calculating the route.');
+    }
+  }
+
+  Widget _goScreen() {
+    return Container(
+      color: Colors.lightBlueAccent,
+      height: 70,
+      width: double.infinity,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: 150,
+            child: ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    cleanSlate();
+                  });
+                },
+                child: const Row(
+                  children: [
+                    Icon(Icons.cancel),
+                    SizedBox(
+                      width: 5,
+                    ),
+                    Text(
+                      'Cancel',
+                      style: TextStyle(fontSize: 18),
+                    ),
+                  ],
+                )),
+          ),
+          const SizedBox(
+            width: 15,
+          ),
+          SizedBox(
+            width: 150,
+            child: ElevatedButton(
+                style: const ButtonStyle(
+                    backgroundColor: WidgetStatePropertyAll(Colors.green)),
+                onPressed: () {
+                  _navigationViewController!.setNavigationUIEnabled(true);
+                  setState(() {
+                    _uiEnabled = true;
+                  });
+                },
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.navigation),
+                    SizedBox(
+                      width: 5,
+                    ),
+                    Text(
+                      'Go',
+                      style: TextStyle(color: Colors.white, fontSize: 18),
+                    ),
+                  ],
+                )),
+          ),
+        ],
+      ),
+    );
+  }
 }
