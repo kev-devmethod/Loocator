@@ -17,7 +17,7 @@ class InfoScreen extends StatefulWidget {
 }
 
 class _InfoScreenState extends State<InfoScreen> {
-  double rating = 4.5;
+  double rating = 2.75;
   int ratingAmount = 300;
   List<String> reviews = [
     'I love this bathroom!',
@@ -80,29 +80,32 @@ class _InfoScreenState extends State<InfoScreen> {
             ),
 
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Ratings
-                _ratingStarsWidget(),
-                const SizedBox(
-                  width: 5,
-                ),
-                Text('$rating/5 ($ratingAmount)'),
-                const SizedBox(
-                  width: 5,
-                ),
-                // Accessibilty Icon
-                isAccesible
-                    ? const Icon(
-                        Icons.accessible_forward,
-                        size: 20,
-                      )
-                    : const SizedBox(),
-                const SizedBox(
-                  width: 80,
+                Row(
+                  children: [
+                    // Ratings
+                    _ratingStarsWidget(),
+                    const SizedBox(
+                      width: 5,
+                    ),
+                    Text('$rating/5 ($ratingAmount)'),
+                    const SizedBox(
+                      width: 5,
+                    ),
+                    // Accessibilty Icon
+                    isAccesible
+                        ? const Icon(
+                            Icons.accessible_forward,
+                            size: 20,
+                          )
+                        : const SizedBox(),
+                  ],
                 ),
                 // Distance
                 Text(
                   '${widget.distance} mi, ${widget.time} min',
+                  textAlign: TextAlign.end,
                 )
               ],
             ),

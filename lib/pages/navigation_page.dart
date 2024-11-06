@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:google_navigation_flutter/google_navigation_flutter.dart';
-import 'package:loocator/api/routes_api.dart';
 import 'package:loocator/utils/utils.dart';
 import 'package:loocator/widgets/in_route_screen.dart';
 import 'package:loocator/widgets/info_screen.dart';
@@ -16,6 +15,7 @@ class NavigationPage extends StatefulWidget {
 }
 
 class _NavigationPageState extends State<NavigationPage> {
+  // TODO: make marker be a list returned from a firestore database of restrooms/markers
   List<LatLng> markers = [
     LatLng(latitude: 32.787971, longitude: -79.936245), // Camden Garage
     LatLng(latitude: 32.787118, longitude: -79.936853), // Hotel Bennett
@@ -127,8 +127,8 @@ class _NavigationPageState extends State<NavigationPage> {
     _remainingTimeOrDistanceChangedSubscription =
         GoogleMapsNavigator.setOnRemainingTimeOrDistanceChangedListener(
             _onRemainingTimeOrDistanceChangedEvent,
-            remainingDistanceThresholdMeters: 100,
-            remainingTimeThresholdSeconds: 60);
+            remainingDistanceThresholdMeters: 1,
+            remainingTimeThresholdSeconds: 1);
   }
 
   void _clearListeners() {
@@ -321,6 +321,9 @@ class _NavigationPageState extends State<NavigationPage> {
       appBar: AppBar(
         title: const Text('Loocator'),
         backgroundColor: Colors.lightBlueAccent,
+        actions: const [
+          IconButton(onPressed: null, icon: Icon(Icons.menu)),
+        ],
       ),
       body: _navigatorInitializedAtLeastOnce && _userLocation != null
           //? Text('hello')
@@ -464,5 +467,9 @@ class _NavigationPageState extends State<NavigationPage> {
         ],
       ),
     );
+  }
+
+  Widget menu() {
+    return const MenuAnchor(menuChildren: <Widget>[MenuItemButton()]);
   }
 }
