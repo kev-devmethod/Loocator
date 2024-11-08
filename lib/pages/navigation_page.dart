@@ -1,8 +1,8 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:google_navigation_flutter/google_navigation_flutter.dart';
+import 'package:loocator/api/distance_matrix_api.dart';
 import 'package:loocator/utils/utils.dart';
 import 'package:loocator/widgets/in_route_screen.dart';
 import 'package:loocator/widgets/info_screen.dart';
@@ -20,6 +20,7 @@ class _NavigationPageState extends State<NavigationPage> {
     LatLng(latitude: 32.787971, longitude: -79.936245), // Camden Garage
     LatLng(latitude: 32.787118, longitude: -79.936853), // Hotel Bennett
     LatLng(latitude: 32.786573, longitude: -79.936916), // Marion Square Garage
+    LatLng(latitude: 32.785975, longitude: -79.936825), // Francis Marion Hotel
   ];
   List<NavigationWaypoint> _waypoints = <NavigationWaypoint>[];
 
@@ -218,6 +219,18 @@ class _NavigationPageState extends State<NavigationPage> {
     _updateNavigationDestinations();
   }
 
+  Future<void> _updateNavigationDestinationsAndNavigationViewState() async {
+    final bool success = await _updateNavigationDestinations();
+    if (success) {
+      await _navigationViewController!.setNavigationUIEnabled(true);
+    }
+
+    setState(() {
+      _validRoute = true;
+      _uiEnabled = true;
+    });
+  }
+
   Future<bool> _updateNavigationDestinations() async {
     if (_navigationViewController == null || _waypoints.isEmpty) {
       return false;
@@ -321,12 +334,27 @@ class _NavigationPageState extends State<NavigationPage> {
       appBar: AppBar(
         title: const Text('Loocator'),
         backgroundColor: Colors.lightBlueAccent,
-        actions: const [
-          IconButton(onPressed: null, icon: Icon(Icons.menu)),
+        actions: [
+          _menu(),
         ],
       ),
+      floatingActionButton: SizedBox(
+        height: 100,
+        width: 100,
+        child: !_validRoute
+            ? FloatingActionButton(
+                onPressed: () {
+                  _findNearestRestroom();
+                },
+                shape: const CircleBorder(),
+                child: const Icon(
+                  Icons.wc,
+                  size: 45,
+                ),
+              )
+            : null,
+      ),
       body: _navigatorInitializedAtLeastOnce && _userLocation != null
-          //? Text('hello')
           ? GoogleMapsNavigationView(
               onViewCreated: _onViewCreated,
               onMarkerClicked: _onMarkerClicked,
@@ -374,7 +402,6 @@ class _NavigationPageState extends State<NavigationPage> {
   }
 
   void _onMarkerClicked(String marker) {
-    _updateNavigationDestinations();
     showModalBottomSheet(
       context: context,
       builder: (context) => InfoScreen(
@@ -393,6 +420,24 @@ class _NavigationPageState extends State<NavigationPage> {
   void dispose() {
     GoogleMapsNavigator.cleanup();
     super.dispose();
+  }
+
+  void _findNearestRestroom() async {
+    await _addWaypoint(
+        'Marker_${await findNearestDestination(_latLngAsString(_userLocation!), _buildDestinationRequest(markers))}');
+    await _updateNavigationDestinationsAndNavigationViewState();
+  }
+
+  String _buildDestinationRequest(List<LatLng> destinations) {
+    String request = "";
+    for (LatLng point in destinations) {
+      request += "${_latLngAsString(point)}|";
+    }
+    return request.substring(0, request.length - 2);
+  }
+
+  String _latLngAsString(LatLng point) {
+    return '${point.latitude},${point.longitude}';
   }
 
   void showMessage(String message) {
@@ -448,6 +493,7 @@ class _NavigationPageState extends State<NavigationPage> {
                   _navigationViewController!.setNavigationUIEnabled(true);
                   setState(() {
                     _uiEnabled = true;
+                    _validRoute = true;
                   });
                 },
                 child: const Row(
@@ -469,7 +515,29 @@ class _NavigationPageState extends State<NavigationPage> {
     );
   }
 
-  Widget menu() {
-    return const MenuAnchor(menuChildren: <Widget>[MenuItemButton()]);
+  Widget _menu() {
+    return MenuAnchor(
+      menuChildren: <Widget>[
+        // TODO: Make this the menu for login, registration, and customer service
+        MenuItemButton(
+          onPressed: () {
+            showMessage('This was pressed.');
+          },
+          child: const Text('Press Me!!!'),
+        )
+      ],
+      builder: (_, MenuController controller, Widget? child) {
+        return IconButton(
+          onPressed: () {
+            if (controller.isOpen) {
+              controller.close();
+            } else {
+              controller.open();
+            }
+          },
+          icon: const Icon(Icons.menu),
+        );
+      },
+    );
   }
 }
