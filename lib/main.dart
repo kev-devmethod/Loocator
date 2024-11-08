@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:loocator/pages/map_page.dart';
 import 'package:loocator/pages/navigation_page.dart';
 
 void main() => runApp(const MyApp());
