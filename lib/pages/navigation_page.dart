@@ -1,3 +1,5 @@
+// ignore_for_file: unused_field
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -21,6 +23,21 @@ class _NavigationPageState extends State<NavigationPage> {
     LatLng(latitude: 32.787118, longitude: -79.936853), // Hotel Bennett
     LatLng(latitude: 32.786573, longitude: -79.936916), // Marion Square Garage
     LatLng(latitude: 32.785975, longitude: -79.936825), // Francis Marion Hotel
+  ];
+
+  List<String> reviews = [
+    'I love this bathroom!',
+    'I really love this bathroom!',
+    'I hate this bathroom!',
+    'I love this bathroom!',
+    'I really love this bathroom!',
+    'I hate this bathroom!',
+    'I love this bathroom!',
+    'I really love this bathroom!',
+    'I hate this bathroom!',
+    'I love this bathroom!',
+    'I really love this bathroom!',
+    'I hate this bathroom!',
   ];
   List<NavigationWaypoint> _waypoints = <NavigationWaypoint>[];
 
@@ -333,7 +350,7 @@ class _NavigationPageState extends State<NavigationPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Loocator'),
-        backgroundColor: Colors.lightBlueAccent,
+        backgroundColor: Theme.of(context).primaryColorLight,
         actions: [
           _menu(),
         ],
@@ -412,6 +429,7 @@ class _NavigationPageState extends State<NavigationPage> {
         },
         distance: _remainingDistance,
         time: _remaingingTime,
+        reviews: reviews,
       ),
     );
   }
@@ -454,7 +472,7 @@ class _NavigationPageState extends State<NavigationPage> {
 
   Widget _goScreen() {
     return Container(
-      color: Colors.lightBlueAccent,
+      color: Theme.of(context).primaryColorLight,
       height: 70,
       width: double.infinity,
       child: Row(
