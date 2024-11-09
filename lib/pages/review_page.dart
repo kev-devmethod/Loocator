@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart';
 import 'package:loocator/widgets/star_rating.dart';
 
 // ignore: must_be_immutable
 class ReviewPage extends StatefulWidget {
-  final List<String> reviews;
-  double rating;
+  List<String> reviews;
+  List<double> ratings;
+  double avgRating;
 
-  ReviewPage({super.key, required this.reviews, required this.rating});
+  ReviewPage(
+      {super.key,
+      required this.reviews,
+      required this.ratings,
+      required this.avgRating});
 
   @override
   State<ReviewPage> createState() => _ReviewPageState();
@@ -14,6 +20,7 @@ class ReviewPage extends StatefulWidget {
 
 class _ReviewPageState extends State<ReviewPage> {
   bool updatedRating = false;
+  double newRating = 0.0;
   TextEditingController description = TextEditingController();
 
   @override
@@ -42,13 +49,13 @@ class _ReviewPageState extends State<ReviewPage> {
                         height: 75,
                       ),
                       Text(
-                        '${widget.rating}/5.0',
+                        '$newRating/5.0',
                         style: const TextStyle(fontSize: 16),
                       ),
                       StarRating(
-                          rating: widget.rating,
+                          rating: newRating,
                           onRatingChanged: (rating) => setState(() {
-                                widget.rating = rating;
+                                newRating = rating;
                                 updatedRating = true;
                               })),
                       const SizedBox(
@@ -58,10 +65,20 @@ class _ReviewPageState extends State<ReviewPage> {
                       const SizedBox(
                         height: 20,
                       ),
-                      TextField(
-                        controller: description,
-                        decoration: const InputDecoration(
-                          labelText: 'Write a Description (Optional)',
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 22.0),
+                        child: SizedBox(
+                          width: double.maxFinite,
+                          child: TextField(
+                            maxLines: null,
+                            controller: description,
+                            decoration: InputDecoration(
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              labelText: 'Write a Description (Optional)',
+                            ),
+                          ),
                         ),
                       ),
                       const SizedBox(
@@ -70,10 +87,19 @@ class _ReviewPageState extends State<ReviewPage> {
                       ElevatedButton(
                           onPressed: (updatedRating)
                               ? () {
-                                  setState(() =>
-                                      widget.reviews.add(description.text));
+                                  setState(() {
+                                    if (description.text.isNotEmpty) {
+                                      widget.reviews.add(description.text);
+                                    }
+                                    widget.ratings.add(newRating);
+                                    Navigator.pop(context);
+                                    showMessage('Thank you for Reviewing!');
+                                  });
                                 }
                               : null,
+                          style: ElevatedButton.styleFrom(
+                              backgroundColor:
+                                  Theme.of(context).primaryColorLight),
                           child: const Text('Submit Review')),
                     ]),
               ),
@@ -82,5 +108,10 @@ class _ReviewPageState extends State<ReviewPage> {
         ),
       ),
     );
+  }
+
+  void showMessage(String message) {
+    final SnackBar snackBar = SnackBar(content: Text(message));
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 }

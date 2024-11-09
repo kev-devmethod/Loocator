@@ -5,14 +5,16 @@ class InfoScreen extends StatefulWidget {
   final void Function()? onPressed;
   final int distance;
   final int time;
-  final List<String> reviews;
+  List<String> reviews;
+  List<double>? ratings;
 
-  const InfoScreen({
+  InfoScreen({
     super.key,
     required this.onPressed,
     required this.distance,
     required this.time,
     required this.reviews,
+    required this.ratings,
   });
 
   @override
@@ -20,141 +22,140 @@ class InfoScreen extends StatefulWidget {
 }
 
 class _InfoScreenState extends State<InfoScreen> {
-  double rating = 2.75;
-  int ratingAmount = 300;
+  double? avgRating;
+  int ratingAmount = 0;
   bool isAccesible = true;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: // Place's Name
-            const Text(
-          'Place Name',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
+        appBar: AppBar(
+          title: // Place's Name
+              const Text(
+            'Place Name',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
           ),
+          backgroundColor: Theme.of(context).primaryColorLight,
         ),
-        backgroundColor: Theme.of(context).primaryColorLight,
-      ),
-      body: SizedBox(
-        height: 500,
-        width: double.infinity,
-        child: ListView(
-          scrollDirection: Axis.vertical,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Address
-                  const Text(
-                    'Address',
-                    textAlign: TextAlign.start,
-                    style: TextStyle(
-                      fontSize: 12,
+        body: SizedBox(
+            height: 500,
+            width: double.infinity,
+            child: ListView(scrollDirection: Axis.vertical, children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Address
+                    const Text(
+                      'Address',
+                      textAlign: TextAlign.start,
+                      style: TextStyle(
+                        fontSize: 12,
+                      ),
                     ),
-                  ),
 
-                  // Review Images
-                  SizedBox(
-                    height: 200,
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      children: [
-                        // TODO: Replace the widgets with [List.generate()] and generate
-                        // a list of _imageContainers()
-                        _imageContainer(),
-                        const SizedBox(
-                          width: 20,
-                        ),
-                        _imageContainer(),
-                        const SizedBox(
-                          width: 20,
-                        ),
-                        _imageContainer(),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 10,
-                  ),
-
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
+                    // Review Images
+                    SizedBox(
+                      height: 200,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
                         children: [
-                          // Ratings
-                          _ratingStarsWidget(),
+                          // TODO: Replace the widgets with [List.generate()] and generate
+                          // a list of _imageContainers()
+                          _imageContainer(),
                           const SizedBox(
-                            width: 5,
+                            width: 20,
                           ),
-                          Text('$rating/5 ($ratingAmount)'),
+                          _imageContainer(),
                           const SizedBox(
-                            width: 5,
+                            width: 20,
                           ),
-                          // Accessibilty Icon
-                          isAccesible
-                              ? const Icon(
-                                  Icons.accessible_forward,
-                                  size: 20,
-                                )
-                              : const SizedBox(),
+                          _imageContainer(),
                         ],
                       ),
-                      // Distance
-                      Text(
-                        '${widget.distance} mi, ${widget.time} min',
-                        textAlign: TextAlign.end,
-                      )
-                    ],
-                  ),
-                  const SizedBox(
-                    height: 15,
-                  ),
+                    ),
+                    const SizedBox(
+                      height: 10,
+                    ),
 
-                  // Reviews
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Reviews',
-                        style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            decoration: TextDecoration.underline),
-                      ),
-                      IconButton(
-                          onPressed: () {
-                            showModalBottomSheet(
-                              context: context,
-                              builder: (context) => ReviewPage(
-                                reviews: widget.reviews,
-                                rating: rating,
-                              ),
-                            );
-                          },
-                          icon: const Icon(Icons.add)),
-                    ],
-                  ),
-                  _reviewListWidget(),
-                  const SizedBox(
-                    height: 15,
-                  ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            // Ratings
+                            _ratingStarsWidget(),
+                            const SizedBox(
+                              width: 5,
+                            ),
+                            _displayAverageRatings(),
+                            const SizedBox(
+                              width: 5,
+                            ),
+                            // Accessibilty Icon
+                            isAccesible
+                                ? const Icon(
+                                    Icons.accessible_forward,
+                                    size: 20,
+                                  )
+                                : const SizedBox(),
+                          ],
+                        ),
+                        // Distance
+                        Text(
+                          '${widget.distance} mi, ${widget.time} min',
+                          textAlign: TextAlign.end,
+                        )
+                      ],
+                    ),
+                    const SizedBox(
+                      height: 15,
+                    ),
 
-                  // Get Directions Button
-                  ElevatedButton(
+                    // Reviews
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Reviews',
+                          style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              decoration: TextDecoration.underline),
+                        ),
+                        IconButton(
+                            onPressed: () {
+                              showModalBottomSheet(
+                                context: context,
+                                builder: (context) => ReviewPage(
+                                  reviews: widget.reviews,
+                                  ratings: widget.ratings!,
+                                  avgRating: avgRating!,
+                                ),
+                              );
+                            },
+                            icon: const Icon(Icons.add)),
+                      ],
+                    ),
+                    _reviewListWidget(),
+                    const SizedBox(
+                      height: 15,
+                    ),
+
+                    // Get Directions Button
+                    ElevatedButton(
                       onPressed: widget.onPressed,
-                      child: const Text('Get Directions')),
-                ],
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: Theme.of(context).primaryColorLight),
+                      child: const Text('Get Directions'),
+                    )
+                  ],
+                ),
               ),
-            )
-          ],
-        ),
-      ),
-    );
+            ])));
   }
 
   Widget _imageContainer() {
@@ -172,12 +173,14 @@ class _InfoScreenState extends State<InfoScreen> {
   }
 
   Widget _buildStar(int index) {
-    if (index >= rating) {
+    _setAverage();
+
+    if (index >= avgRating!) {
       return const Icon(
         Icons.star_border,
         color: Colors.amber,
       );
-    } else if (index > rating - 1 && index < rating) {
+    } else if (index > avgRating! - 1 && index < avgRating!) {
       return const Icon(
         Icons.star_half,
         color: Colors.amber,
@@ -202,7 +205,33 @@ class _InfoScreenState extends State<InfoScreen> {
     return Text(
       widget.reviews[index],
       textAlign: TextAlign.start,
-      style: TextStyle(fontSize: 12),
+      style: const TextStyle(fontSize: 12),
     );
+  }
+
+  Widget _displayAverageRatings() {
+    _setAverage();
+    return Text('$avgRating/5 ($ratingAmount)');
+  }
+
+  void _setAverage() {
+    setState(() {
+      avgRating = double.parse(_average(widget.ratings!).toStringAsFixed(1));
+      ratingAmount = widget.ratings!.length;
+    });
+  }
+
+  double _average(List<double> nums) {
+    double avg = 0.0;
+    for (double num in nums) {
+      avg += num;
+    }
+
+    return avg / nums.length;
+  }
+
+  void showMessage(String message) {
+    final SnackBar snackBar = SnackBar(content: Text(message));
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 }

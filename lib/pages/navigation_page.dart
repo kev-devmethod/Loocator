@@ -27,11 +27,16 @@ class _NavigationPageState extends State<NavigationPage> {
         latitude: 32.785975, longitude: -79.936825), // Francis Marion Hotel
   ];
 
+  // TODO: make this a list returned from a firestore database of reviews from a specific restrooms
   List<String> reviews = [
     'I love this bathroom!',
     'I really love this bathroom!',
     'I hate this bathroom!',
   ];
+
+  // TODO: make this a list returned from a firestore database of ratings from a specific restroom
+  List<double>? ratings = [2.0, 3.0, 4.0];
+
   List<NavigationWaypoint> _waypoints = <NavigationWaypoint>[];
 
   LatLng? _userLocation;
@@ -423,6 +428,7 @@ class _NavigationPageState extends State<NavigationPage> {
         distance: _remainingDistance,
         time: _remaingingTime,
         reviews: reviews,
+        ratings: ratings,
       ),
     );
   }
