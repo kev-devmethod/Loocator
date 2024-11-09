@@ -1,4 +1,4 @@
-// ignore_for_file: unused_field
+// ignore_for_file: unused_field, prefer_final_fields
 
 import 'dart:async';
 
@@ -19,29 +19,22 @@ class NavigationPage extends StatefulWidget {
 class _NavigationPageState extends State<NavigationPage> {
   // TODO: make marker be a list returned from a firestore database of restrooms/markers
   List<LatLng> markers = [
-    LatLng(latitude: 32.787971, longitude: -79.936245), // Camden Garage
-    LatLng(latitude: 32.787118, longitude: -79.936853), // Hotel Bennett
-    LatLng(latitude: 32.786573, longitude: -79.936916), // Marion Square Garage
-    LatLng(latitude: 32.785975, longitude: -79.936825), // Francis Marion Hotel
+    const LatLng(latitude: 32.787971, longitude: -79.936245), // Camden Garage
+    const LatLng(latitude: 32.787118, longitude: -79.936853), // Hotel Bennett
+    const LatLng(
+        latitude: 32.786573, longitude: -79.936916), // Marion Square Garage
+    const LatLng(
+        latitude: 32.785975, longitude: -79.936825), // Francis Marion Hotel
   ];
 
   List<String> reviews = [
     'I love this bathroom!',
     'I really love this bathroom!',
     'I hate this bathroom!',
-    'I love this bathroom!',
-    'I really love this bathroom!',
-    'I hate this bathroom!',
-    'I love this bathroom!',
-    'I really love this bathroom!',
-    'I hate this bathroom!',
-    'I love this bathroom!',
-    'I really love this bathroom!',
-    'I hate this bathroom!',
   ];
   List<NavigationWaypoint> _waypoints = <NavigationWaypoint>[];
 
-  LatLng? _userLocation = null;
+  LatLng? _userLocation;
   static const int _userLocationTimeoutMS = 1500;
   static const LatLng cameraLocationMIT =
       LatLng(latitude: 42.3601, longitude: -71.094013);

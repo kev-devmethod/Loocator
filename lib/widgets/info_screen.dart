@@ -26,129 +26,133 @@ class _InfoScreenState extends State<InfoScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 500,
-      width: double.infinity,
-      color: Theme.of(context).scaffoldBackgroundColor,
-      child: ListView(
-        scrollDirection: Axis.vertical,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Place's Name
-                const Text(
-                  'Place Name',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
+    return Scaffold(
+      appBar: AppBar(
+        title: // Place's Name
+            const Text(
+          'Place Name',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        backgroundColor: Theme.of(context).primaryColorLight,
+      ),
+      body: SizedBox(
+        height: 500,
+        width: double.infinity,
+        child: ListView(
+          scrollDirection: Axis.vertical,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Address
+                  const Text(
+                    'Address',
+                    textAlign: TextAlign.start,
+                    style: TextStyle(
+                      fontSize: 12,
+                    ),
                   ),
-                ),
 
-                // Address
-                const Text(
-                  'Address',
-                  textAlign: TextAlign.start,
-                  style: TextStyle(
-                    fontSize: 12,
-                  ),
-                ),
-
-                // Review Images
-                SizedBox(
-                  height: 200,
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
-                    children: [
-                      // TODO: Replace the widgets with [List.generate()] and generate
-                      // a list of _imageContainers()
-                      _imageContainer(),
-                      const SizedBox(
-                        width: 20,
-                      ),
-                      _imageContainer(),
-                      const SizedBox(
-                        width: 20,
-                      ),
-                      _imageContainer(),
-                    ],
-                  ),
-                ),
-                const SizedBox(
-                  height: 10,
-                ),
-
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
+                  // Review Images
+                  SizedBox(
+                    height: 200,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
                       children: [
-                        // Ratings
-                        _ratingStarsWidget(),
+                        // TODO: Replace the widgets with [List.generate()] and generate
+                        // a list of _imageContainers()
+                        _imageContainer(),
                         const SizedBox(
-                          width: 5,
+                          width: 20,
                         ),
-                        Text('$rating/5 ($ratingAmount)'),
+                        _imageContainer(),
                         const SizedBox(
-                          width: 5,
+                          width: 20,
                         ),
-                        // Accessibilty Icon
-                        isAccesible
-                            ? const Icon(
-                                Icons.accessible_forward,
-                                size: 20,
-                              )
-                            : const SizedBox(),
+                        _imageContainer(),
                       ],
                     ),
-                    // Distance
-                    Text(
-                      '${widget.distance} mi, ${widget.time} min',
-                      textAlign: TextAlign.end,
-                    )
-                  ],
-                ),
-                const SizedBox(
-                  height: 15,
-                ),
+                  ),
+                  const SizedBox(
+                    height: 10,
+                  ),
 
-                // Reviews
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Reviews',
-                      style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          decoration: TextDecoration.underline),
-                    ),
-                    IconButton(
-                        onPressed: () {
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => const ReviewPage()));
-                        },
-                        icon: const Icon(Icons.add)),
-                  ],
-                ),
-                _reviewListWidget(),
-                const SizedBox(
-                  height: 15,
-                ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          // Ratings
+                          _ratingStarsWidget(),
+                          const SizedBox(
+                            width: 5,
+                          ),
+                          Text('$rating/5 ($ratingAmount)'),
+                          const SizedBox(
+                            width: 5,
+                          ),
+                          // Accessibilty Icon
+                          isAccesible
+                              ? const Icon(
+                                  Icons.accessible_forward,
+                                  size: 20,
+                                )
+                              : const SizedBox(),
+                        ],
+                      ),
+                      // Distance
+                      Text(
+                        '${widget.distance} mi, ${widget.time} min',
+                        textAlign: TextAlign.end,
+                      )
+                    ],
+                  ),
+                  const SizedBox(
+                    height: 15,
+                  ),
 
-                // Get Directions Button
-                ElevatedButton(
-                    onPressed: widget.onPressed,
-                    child: const Text('Get Directions')),
-              ],
-            ),
-          )
-        ],
+                  // Reviews
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Reviews',
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            decoration: TextDecoration.underline),
+                      ),
+                      IconButton(
+                          onPressed: () {
+                            showModalBottomSheet(
+                              context: context,
+                              builder: (context) => ReviewPage(
+                                reviews: widget.reviews,
+                                rating: rating,
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.add)),
+                    ],
+                  ),
+                  _reviewListWidget(),
+                  const SizedBox(
+                    height: 15,
+                  ),
+
+                  // Get Directions Button
+                  ElevatedButton(
+                      onPressed: widget.onPressed,
+                      child: const Text('Get Directions')),
+                ],
+              ),
+            )
+          ],
+        ),
       ),
     );
   }
