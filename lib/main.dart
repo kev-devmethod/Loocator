@@ -12,6 +12,9 @@ class MyApp extends StatelessWidget {
       title: 'Loocator',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.lightBlueAccent),
+        buttonTheme: ButtonThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.lightBlueAccent),
+        ),
         useMaterial3: true,
       ),
       home: const NavigationPage(), //MapPage(),

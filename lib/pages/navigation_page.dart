@@ -1,11 +1,14 @@
+// ignore_for_file: unused_field, prefer_final_fields
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:google_navigation_flutter/google_navigation_flutter.dart';
 import 'package:loocator/api/distance_matrix_api.dart';
+import 'package:loocator/pages/add_marker.dart';
 import 'package:loocator/utils/utils.dart';
-import 'package:loocator/widgets/in_route_screen.dart';
-import 'package:loocator/widgets/info_screen.dart';
+import 'package:loocator/pages/in_route_screen.dart';
+import 'package:loocator/pages/info_screen.dart';
 
 class NavigationPage extends StatefulWidget {
   const NavigationPage({super.key});
@@ -17,14 +20,27 @@ class NavigationPage extends StatefulWidget {
 class _NavigationPageState extends State<NavigationPage> {
   // TODO: make marker be a list returned from a firestore database of restrooms/markers
   List<LatLng> markers = [
-    LatLng(latitude: 32.787971, longitude: -79.936245), // Camden Garage
-    LatLng(latitude: 32.787118, longitude: -79.936853), // Hotel Bennett
-    LatLng(latitude: 32.786573, longitude: -79.936916), // Marion Square Garage
-    LatLng(latitude: 32.785975, longitude: -79.936825), // Francis Marion Hotel
+    const LatLng(latitude: 32.787971, longitude: -79.936245), // Camden Garage
+    const LatLng(latitude: 32.787118, longitude: -79.936853), // Hotel Bennett
+    const LatLng(
+        latitude: 32.786573, longitude: -79.936916), // Marion Square Garage
+    const LatLng(
+        latitude: 32.785975, longitude: -79.936825), // Francis Marion Hotel
   ];
+
+  // TODO: make this a list returned from a firestore database of reviews from a specific restrooms
+  List<String> reviews = [
+    'I love this bathroom!',
+    'I really love this bathroom!',
+    'I hate this bathroom!',
+  ];
+
+  // TODO: make this a list returned from a firestore database of ratings from a specific restroom
+  List<double>? ratings = [2.0, 3.0, 4.0];
+
   List<NavigationWaypoint> _waypoints = <NavigationWaypoint>[];
 
-  LatLng? _userLocation = null;
+  LatLng? _userLocation;
   static const int _userLocationTimeoutMS = 1500;
   static const LatLng cameraLocationMIT =
       LatLng(latitude: 42.3601, longitude: -71.094013);
@@ -333,7 +349,7 @@ class _NavigationPageState extends State<NavigationPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Loocator'),
-        backgroundColor: Colors.lightBlueAccent,
+        backgroundColor: Theme.of(context).primaryColorLight,
         actions: [
           _menu(),
         ],
@@ -358,6 +374,7 @@ class _NavigationPageState extends State<NavigationPage> {
           ? GoogleMapsNavigationView(
               onViewCreated: _onViewCreated,
               onMarkerClicked: _onMarkerClicked,
+              onMapLongClicked: _onMapLongClicked,
               initialNavigationUIEnabledPreference:
                   NavigationUIEnabledPreference.disabled,
               initialCameraPosition: CameraPosition(
@@ -401,6 +418,11 @@ class _NavigationPageState extends State<NavigationPage> {
     // Additional setup can be added here.
   }
 
+  void _onMapLongClicked(LatLng position) {
+    showModalBottomSheet(
+        context: context, builder: (context) => const AddMarker());
+  }
+
   void _onMarkerClicked(String marker) {
     showModalBottomSheet(
       context: context,
@@ -412,6 +434,8 @@ class _NavigationPageState extends State<NavigationPage> {
         },
         distance: _remainingDistance,
         time: _remaingingTime,
+        reviews: reviews,
+        ratings: ratings,
       ),
     );
   }
@@ -454,7 +478,7 @@ class _NavigationPageState extends State<NavigationPage> {
 
   Widget _goScreen() {
     return Container(
-      color: Colors.lightBlueAccent,
+      color: Theme.of(context).primaryColorLight,
       height: 70,
       width: double.infinity,
       child: Row(
