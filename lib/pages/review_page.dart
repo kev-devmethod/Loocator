@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart';
 import 'package:loocator/widgets/star_rating.dart';
 
 // ignore: must_be_immutable
@@ -48,10 +47,12 @@ class _ReviewPageState extends State<ReviewPage> {
                       const SizedBox(
                         height: 75,
                       ),
+                      // Display the rating as a fraction
                       Text(
                         '$newRating/5.0',
                         style: const TextStyle(fontSize: 16),
                       ),
+                      // Rate the restroom out of 5 stars
                       StarRating(
                           rating: newRating,
                           onRatingChanged: (rating) => setState(() {
@@ -65,6 +66,7 @@ class _ReviewPageState extends State<ReviewPage> {
                       const SizedBox(
                         height: 20,
                       ),
+                      // Descriptive Rating
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 22.0),
                         child: SizedBox(
@@ -84,6 +86,7 @@ class _ReviewPageState extends State<ReviewPage> {
                       const SizedBox(
                         height: 20,
                       ),
+                      // Submit Button
                       ElevatedButton(
                           onPressed: (updatedRating)
                               ? () {

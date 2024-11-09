@@ -5,9 +5,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_navigation_flutter/google_navigation_flutter.dart';
 import 'package:loocator/api/distance_matrix_api.dart';
+import 'package:loocator/pages/add_marker.dart';
 import 'package:loocator/utils/utils.dart';
-import 'package:loocator/widgets/in_route_screen.dart';
-import 'package:loocator/widgets/info_screen.dart';
+import 'package:loocator/pages/in_route_screen.dart';
+import 'package:loocator/pages/info_screen.dart';
 
 class NavigationPage extends StatefulWidget {
   const NavigationPage({super.key});
@@ -373,6 +374,7 @@ class _NavigationPageState extends State<NavigationPage> {
           ? GoogleMapsNavigationView(
               onViewCreated: _onViewCreated,
               onMarkerClicked: _onMarkerClicked,
+              onMapLongClicked: _onMapLongClicked,
               initialNavigationUIEnabledPreference:
                   NavigationUIEnabledPreference.disabled,
               initialCameraPosition: CameraPosition(
@@ -414,6 +416,11 @@ class _NavigationPageState extends State<NavigationPage> {
     controller.setMyLocationEnabled(true);
     await _placeMarkers();
     // Additional setup can be added here.
+  }
+
+  void _onMapLongClicked(LatLng position) {
+    showModalBottomSheet(
+        context: context, builder: (context) => const AddMarker());
   }
 
   void _onMarkerClicked(String marker) {
